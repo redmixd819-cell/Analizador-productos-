@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analizador de rotación</title>
+<style>
+  body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 16px; background: #f4f4f7; }
+  h1 { font-size: 22px; }
+  input { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; margin-bottom: 8px; }
+  button { width: 100%; padding: 12px; font-size: 16px; background: #2b6cb0; color: white; border: 0; border-radius: 6px; }
+  .card { background: white; padding: 16px; border-radius: 8px; margin-top: 16px; }
+  .puntaje { font-size: 64px; font-weight: bold; text-align: center; }
+  .veredicto { text-align: center; font-size: 20px; margin-bottom: 12px; }
+  a { color: #2b6cb0; }
+  li { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<h1>Analizador de rotación de productos (Argentina)</h1>
+<input id="producto" placeholder="Ej: intercomunicador de moto">
+<button onclick="analizar()">Analizar</button>
+<div id="resultado"></div>
+
+<script>
+async function analizar() {
+  const p = document.getElementById('producto').value;
+  const out = document.getElementById('resultado');
+  out.innerHTML = '<div class="card">Analizando, puede tardar unos segundos...</div>';
+  try {
+    const r = await fetch('/analizar?producto=' + encodeURIComponent(p));
+    const d = await r.json();
+    if (d.error) { out.innerHTML = '<div class="card">' + d.error + '</div>'; return; }
+    const top = d.top_ml.map(t =>
+      '<li><a href="' + t.link + '" target="_blank">' + t.titulo + '</a><br>$' +
+      t.precio + ' - ' + t.vendidos + ' vendidos</li>').join('');
+    out.innerHTML =
+      '<div class="card"><div class="puntaje">' + d.puntaje + '%</div>' +
+      '<div class="veredicto">' + d.veredicto + '</div>' +
+      '<p>Interés en Google (0-100): ' + d.interes_google + '</p>' +
+      '<p>Tendencia en 12 meses: ' + d.tendencia_pct + '%</p>' +
+      '<p>Publicaciones en MercadoLibre: ' + d.publicaciones_ml + '</p>' +
+      '<p>Ventas promedio por publicación: ' + d.ventas_promedio_ml + '</p>' +
+      '<p>Precio promedio: $' + d.precio_promedio_ars + '</p>' +
+      '<h3>Más vendidos</h3><ul>' + top + '</ul></div>';
+  } catch (e) {
+    out.innerHTML = '<div class="card">Error al analizar. Probá de nuevo.</div>';
+  }
+}
+</script>
+</body>
+</html>
